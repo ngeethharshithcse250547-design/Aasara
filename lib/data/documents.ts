@@ -1,0 +1,210 @@
+export interface DocumentItem {
+  id: string;
+  schemeId: "COMMON" | "MFS" | "AMY" | "TL" | "UNY" | "ELS";
+  title: string;
+  hindiTitle: string;
+  category: "Baseline Identity & Eligibility" | "Income & Economic" | "Project / Activity Proof" | "Education Proof" | "Banking & Compliance";
+  purpose: string;
+  issuingAuthority: string;
+  howToObtain: string;
+  digitalAlternative: string;
+  mandatory: boolean;
+  source: string;
+  lastVerified: string;
+}
+
+export const DOCUMENTS_DATA: DocumentItem[] = [
+  // Baseline documents
+  {
+    id: "COMMON-D1",
+    schemeId: "COMMON",
+    title: "Caste Certificate (SC)",
+    hindiTitle: "अनुसूचित जाति प्रमाण पत्र",
+    category: "Baseline Identity & Eligibility",
+    purpose: "Mandatory statutory verification that applicant belongs to the Scheduled Caste community.",
+    issuingAuthority: "Tahsildar / Sub-Divisional Magistrate (SDM) / Revenue Authority",
+    howToObtain: "Apply via your State e-District portal or visit the local Tahsildar / Taluk office with school transfer certificate or parent caste certificate.",
+    digitalAlternative: "DigiLocker issued digital caste certificate with QR verification.",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+  {
+    id: "COMMON-D2",
+    schemeId: "COMMON",
+    title: "Family Income Certificate",
+    hindiTitle: "पारिवारिक आय प्रमाण पत्र",
+    category: "Income & Economic",
+    purpose: "Proves that total annual family income from all sources does not exceed ₹5,00,000 ceiling (effective 7 Jan 2026).",
+    issuingAuthority: "Tahsildar / Revenue Inspector / District Magistrate / BDO",
+    howToObtain: "Apply online through State Citizen Service Center (CSC) / e-District or local Taluk revenue office. Valid for financial year.",
+    digitalAlternative: "DigiLocker / e-District digitally signed income certificate.",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+  {
+    id: "COMMON-D3",
+    schemeId: "COMMON",
+    title: "Identity & Address Proof (Aadhaar / Voter ID)",
+    hindiTitle: "पहचान एवं निवास प्रमाण",
+    category: "Baseline Identity & Eligibility",
+    purpose: "Statutory KYC compliance and applicant residence verification.",
+    issuingAuthority: "UIDAI / Election Commission of India / State Government",
+    howToObtain: "Aadhaar Card, Voter Identity Card, Passport, or Ration Card.",
+    digitalAlternative: "m-Aadhaar or DigiLocker verified identity record.",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+  {
+    id: "COMMON-D4",
+    schemeId: "COMMON",
+    title: "Bank Account Passbook / Cancelled Cheque",
+    hindiTitle: "बैंक खाता पासबुक / चेक",
+    category: "Banking & Compliance",
+    purpose: "Direct Benefit Transfer (DBT) disbursement and electronic repayment setup (NACH/e-mandate).",
+    issuingAuthority: "Scheduled Commercial Bank / Regional Rural Bank / Post Office Bank",
+    howToObtain: "Active savings bank account passbook copy showing Account Number, IFSC, and applicant's photograph.",
+    digitalAlternative: "Recent 3-month digital bank statement with bank stamp.",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+  {
+    id: "COMMON-D5",
+    schemeId: "COMMON",
+    title: "Passport Size Photographs (3 copies)",
+    hindiTitle: "पासपोर्ट आकार का फोटो",
+    category: "Baseline Identity & Eligibility",
+    purpose: "Application form affixing and physical agency file verification.",
+    issuingAuthority: "Applicant",
+    howToObtain: "Recent color photographs taken within the last 3 months.",
+    digitalAlternative: "Scanned high-resolution JPG/PNG format (under 200KB).",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+
+  // MFS specific
+  {
+    id: "MFS-D1",
+    schemeId: "MFS",
+    title: "Small Business Activity Plan & Quotation",
+    hindiTitle: "लघु व्यवसाय योजना एवं कोटेशन",
+    category: "Project / Activity Proof",
+    purpose: "Justifies the requested micro-credit amount (up to ₹1.4 Lakh) and specifies equipment/raw material costs.",
+    issuingAuthority: "Equipment vendor quotation or applicant business outline",
+    howToObtain: "Collect written quotation/proforma invoice from equipment supplier or list trade inventory needs.",
+    digitalAlternative: "Vendor electronic invoice / estimation bill.",
+    mandatory: false,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+
+  // AMY specific
+  {
+    id: "AMY-D1",
+    schemeId: "AMY",
+    title: "NBFC-MFI Intake Form & Micro-Finance Undertaking",
+    hindiTitle: "एनबीएफसी-एमएफआई आवेदन पत्र",
+    category: "Project / Activity Proof",
+    purpose: "Selected NBFC-MFI application and Joint Liability Group (JLG) / individual micro-enterprise declaration.",
+    issuingAuthority: "Selected NBFC-MFI Field Officer / Branch",
+    howToObtain: "Provided by empanelled NBFC-MFI representative during local outreach / loan camp.",
+    digitalAlternative: "MFI field agent mobile app digital registration.",
+    mandatory: false,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+
+  // Term Loan specific
+  {
+    id: "TL-D1",
+    schemeId: "TL",
+    title: "Detailed Project Report (DPR) & Feasibility",
+    hindiTitle: "विस्तृत परियोजना रिपोर्ट (डीपीआर)",
+    category: "Project / Activity Proof",
+    purpose: "Crucial for Term Loans (>₹1.4 Lakh up to ₹50 Lakh) to demonstrate economic viability, cash flow, and cost estimation.",
+    issuingAuthority: "Chartered Accountant / District Industries Centre (DIC) / Enterprise Consultant",
+    howToObtain: "Draft project report detailing capital expenditure, working capital, projected revenue, and break-even point.",
+    digitalAlternative: "PDF format Detailed Project Report.",
+    mandatory: false,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+  {
+    id: "TL-D2",
+    schemeId: "TL",
+    title: "Plant / Machinery / Asset Proforma Invoices",
+    hindiTitle: "मशीनरी एवं उपकरण बीजक",
+    category: "Project / Activity Proof",
+    purpose: "Validates capital expenditure for purchase of machinery, vehicles, or workspace fixtures.",
+    issuingAuthority: "Authorised Equipment Dealers / GST Registered Vendors",
+    howToObtain: "Obtain formal proforma invoices containing GSTIN, itemized rates, and supplier bank details.",
+    digitalAlternative: "Official GST digital proforma invoice.",
+    mandatory: false,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+
+  // UNY specific
+  {
+    id: "UNY-D1",
+    schemeId: "UNY",
+    title: "Co-operative / SFB Borrower Membership Form",
+    hindiTitle: "सहकारी संस्था / बैंक सदस्यता प्रमाण",
+    category: "Project / Activity Proof",
+    purpose: "Required by Co-operative Societies, Co-operative Banks, or SFBs routing Udyam Nidhi finance up to ₹5 Lakh.",
+    issuingAuthority: "Local Primary Agricultural Credit Society (PACS) / Urban Co-op Bank / Small Finance Bank",
+    howToObtain: "Enrollment at the local branch or society office where beneficiary resides.",
+    digitalAlternative: "Society membership receipt or account certificate.",
+    mandatory: false,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+
+  // ELS specific
+  {
+    id: "ELS-D1",
+    schemeId: "ELS",
+    title: "Admission Confirmation & Bonafide Letter",
+    hindiTitle: "प्रवेश पुष्टि एवं बोनाफाइड प्रमाण",
+    category: "Education Proof",
+    purpose: "Verifies enrollment in regular full-time professional/technical course at graduate or higher level.",
+    issuingAuthority: "Registrar / Dean / Principal of Recognised College or University",
+    howToObtain: "Formal admission offer letter or Bonafide Student Certificate with roll number / registration details.",
+    digitalAlternative: "Digitally verified university admission portal allotment letter.",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+  {
+    id: "ELS-D2",
+    schemeId: "ELS",
+    title: "Institution Fee Structure & Schedule",
+    hindiTitle: "पाठ्यक्रम शुल्क संरचना विवरण",
+    category: "Education Proof",
+    purpose: "Official itemized fee breakdown (tuition, examination, hostel, books) to calculate 90% assistance up to ₹40 Lakh.",
+    issuingAuthority: "University / Institution Finance or Accounts Department",
+    howToObtain: "Prospectus or official letterhead fee schedule signed by college finance officer.",
+    digitalAlternative: "University portal approved fee structure PDF.",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+  {
+    id: "ELS-D3",
+    schemeId: "ELS",
+    title: "Mark Sheets of Qualifying Examination",
+    hindiTitle: "योग्यता परीक्षा अंक तालिका",
+    category: "Education Proof",
+    purpose: "Proof of basic academic eligibility for graduate/postgraduate technical course.",
+    issuingAuthority: "State Examination Board / University / CBSE / ICSE",
+    howToObtain: "10+2, Diploma, or Graduation degree marksheets.",
+    digitalAlternative: "DigiLocker verified marksheet.",
+    mandatory: true,
+    source: "NSFDC FAQ",
+    lastVerified: "2026-09-09",
+  },
+];
