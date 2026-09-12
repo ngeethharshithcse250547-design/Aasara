@@ -13,36 +13,31 @@ export interface ProfileContextType {
   resetProfile: () => void;
 }
 
+// No answer is pre-selected — the system never assumes a user's answer
 const defaultProfile: BeneficiaryProfile = {
-  isScheduledCaste: true,
-  casteCertificateStatus: "in_hand",
-  annualFamilyIncome: 200000,
-  purpose: "business",
-  requestedAmount: 100000,
-  projectOrCourseCost: 120000,
-  state: "Uttar Pradesh",
-  district: "Varanasi",
-  educationLevel: "graduate",
-  educationLocation: "india",
-  isFullTimeCourse: true,
+  community: undefined,
+  isScheduledCaste: undefined,
+  casteCertificateStatus: undefined,
+  annualFamilyIncome: 0,
+  purpose: undefined,
+  requestedAmount: 0,
+  projectOrCourseCost: 0,
+  state: "",
+  district: "",
+  locale: "en",
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-const STORAGE_KEY = "scheme_sahayak_beneficiary_profile_v1";
-const DOCS_KEY = "scheme_sahayak_doc_statuses_v1";
+const STORAGE_KEY = "scheme_sahayak_beneficiary_profile_v2";
+const DOCS_KEY = "scheme_sahayak_doc_statuses_v2";
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<BeneficiaryProfile>(defaultProfile);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string>("MFS");
-  const [documentStatuses, setDocumentStatuses] = useState<Record<string, "ready" | "in_progress" | "missing">>({
-    "COMMON-D1": "ready",
-    "COMMON-D2": "ready",
-    "COMMON-D3": "ready",
-    "COMMON-D4": "in_progress",
-    "COMMON-D5": "ready",
-    "MFS-D1": "in_progress",
-  });
+  // Document statuses start empty — nothing is pre-checked
+  const [documentStatuses, setDocumentStatuses] = useState<Record<string, "ready" | "in_progress" | "missing">>({});
+
 
   // Load from localStorage on client mount
   useEffect(() => {
@@ -86,6 +81,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const resetProfile = () => {
     setProfile(defaultProfile);
+    setDocumentStatuses({});
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(DOCS_KEY);

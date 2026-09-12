@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProfile } from "../../lib/profileContext";
 import { INDIAN_STATES_AND_UTS } from "../../lib/data/partners";
+import { CommunityCategory } from "../../lib/matchingEngine";
+import { t } from "../../lib/i18n";
 
 export default function AssessmentPage() {
   return (
@@ -18,6 +20,7 @@ function AssessmentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, updateProfile } = useProfile();
+  const locale = profile.locale || "en";
 
   // Step 1 to 6
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -28,6 +31,9 @@ function AssessmentContent() {
   const [naturalText, setNaturalText] = useState<string>("");
   const [isListening, setIsListening] = useState<boolean>(false);
   const [voiceStatus, setVoiceStatus] = useState<string>("");
+
+  // Non-SC notice dismissed
+  const [nonScDismissed, setNonScDismissed] = useState(false);
 
   useEffect(() => {
     // If opened with voice mode query
@@ -90,7 +96,7 @@ function AssessmentContent() {
     if (lakhMatches.length > 0) {
       const amount = parseFloat(lakhMatches[0][1]) * 100000;
       updates.requestedAmount = Math.round(amount);
-      updates.projectOrCourseCost = Math.round(amount * 1.1);
+      updates.projectOrCourseCost = Math.round(amount);
       if (lakhMatches.length > 1) {
         updates.annualFamilyIncome = Math.round(parseFloat(lakhMatches[1][1]) * 100000);
       }
@@ -130,6 +136,20 @@ function AssessmentContent() {
     }
   };
 
+  const handleCommunitySelect = (community: CommunityCategory) => {
+    const isSC = community === "SC";
+    updateProfile({
+      community,
+      isScheduledCaste: isSC,
+    });
+    // If non-SC, show the notice before advancing
+    if (!isSC) {
+      setNonScDismissed(false);
+    } else {
+      handleNext();
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-140px)] bg-cream px-4 py-6 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-xl">
@@ -139,24 +159,26 @@ function AssessmentContent() {
             <button
               type="button"
               onClick={handleBack}
-              className="inline-flex items-center gap-1 text-forest hover:text-ink font-bold py-1 px-2 -ml-2 rounded-lg"
+              className="inline-flex items-center gap-1 text-forest hover:text-ink font-bold py-1 px-2 -ml-2 rounded-lg min-h-[44px]"
+              aria-label="Go back"
             >
-              ← Back
+              {t("assess.back", locale)}
             </button>
             <span>
-              Question {currentStep} of {totalSteps}
+              {t("assess.question_of", locale, { current: String(currentStep), total: String(totalSteps) })}
             </span>
             <button
               type="button"
               onClick={() => setVoiceOpen(!voiceOpen)}
-              className="inline-flex items-center gap-1 text-xs font-bold text-forest bg-forest/10 px-2.5 py-1 rounded-lg hover:bg-forest/20"
+              className="inline-flex items-center gap-1 text-xs font-bold text-forest bg-forest/10 px-2.5 py-1 rounded-lg hover:bg-forest/20 min-h-[44px]"
+              aria-label={voiceOpen ? "Close voice assistant" : "Open voice assistant"}
             >
-              🎤 {voiceOpen ? "Close Voice" : "Use Voice"}
+              <svg className="h-4 w-4 shrink-0 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> {voiceOpen ? t("assess.close_voice", locale) : t("assess.use_voice", locale)}
             </button>
           </div>
 
           {/* Accessible Step Progress Bar */}
-          <div className="h-2 w-full overflow-hidden rounded-full bg-sand">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-sand" role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={totalSteps}>
             <div
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               className="h-full bg-forest transition-all duration-300"
@@ -169,18 +191,19 @@ function AssessmentContent() {
           <div className="mb-6 rounded-2xl border border-forest/30 bg-white p-4 shadow-soft">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-forest uppercase tracking-wider">
-                Voice Assistant (आवाज़ से बताएं)
+                {t("voice.title", locale)}
               </span>
               <button
                 type="button"
                 onClick={() => setVoiceOpen(false)}
-                className="text-xs text-ink/50 hover:text-ink font-bold"
+                className="text-xs text-ink/50 hover:text-ink font-bold min-h-[44px] min-w-[44px] grid place-items-center"
+                aria-label="Close voice assistant"
               >
                 ✕
               </button>
             </div>
             <p className="mt-1 text-xs text-ink/70">
-              Tap the button below and speak in Hindi or English about your need.
+              {t("voice.hint", locale)}
             </p>
             <div className="mt-3 flex gap-2">
               <button
@@ -193,7 +216,7 @@ function AssessmentContent() {
                     : "bg-forest text-white hover:bg-ink"
                 }`}
               >
-                <span>{isListening ? "🔴 Listening..." : "🎤 Tap to Speak Now"}</span>
+                <span className="flex items-center gap-1.5">{isListening ? <><span className="h-2 w-2 rounded-full bg-white animate-pulse"></span> {t("voice.listening", locale)}</> : <><svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> {t("voice.tap_speak", locale)}</>}</span>
               </button>
             </div>
             {voiceStatus && (
@@ -206,85 +229,70 @@ function AssessmentContent() {
 
         {/* ONE QUESTION AT A TIME CARDS */}
 
-        {/* QUESTION 1: SC Community */}
+        {/* QUESTION 1: Community / Category */}
         {currentStep === 1 && (
           <div className="rounded-3xl border border-ink/10 bg-white p-6 sm:p-8 shadow-soft">
             <span className="text-xs font-bold uppercase tracking-wider text-forest">
               Question 1
             </span>
             <h1 className="mt-2 text-2xl font-black text-ink sm:text-3xl leading-snug">
-              Are you from the Scheduled Caste (SC) community?
+              {t("assess.q1.title", locale)}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-forest">
-              क्या आप अनुसूचित जाति (SC) समुदाय से हैं?
-            </p>
             <p className="mt-3 text-xs text-ink/70 leading-relaxed">
-              These special government loans are provided specifically to support members of the Scheduled Caste community.
+              {t("assess.q1.hint", locale)}
             </p>
 
             <div className="mt-6 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  updateProfile({ isScheduledCaste: true });
-                  handleNext();
-                }}
-                className={`flex items-center justify-between rounded-2xl border-2 p-4 text-left font-bold transition min-h-[58px] ${
-                  profile.isScheduledCaste === true
-                    ? "border-forest bg-forest/10 text-forest ring-2 ring-forest/20"
-                    : "border-ink/15 hover:bg-sand/30 text-ink"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">✓</span>
-                  <div>
-                    <span className="block text-base font-extrabold">Yes, I belong to SC community</span>
-                    <span className="block text-xs font-normal text-ink/60">हाँ, मैं अनुसूचित जाति से हूँ</span>
-                  </div>
-                </div>
-                <span className="text-ink/40">→</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  updateProfile({ isScheduledCaste: false });
-                  handleNext();
-                }}
-                className={`flex items-center justify-between rounded-2xl border-2 p-4 text-left font-bold transition min-h-[58px] ${
-                  profile.isScheduledCaste === false
-                    ? "border-rose-500 bg-rose-50 text-rose-800"
-                    : "border-ink/15 hover:bg-sand/30 text-ink"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">✕</span>
-                  <div>
-                    <span className="block text-base font-extrabold">No, another community</span>
-                    <span className="block text-xs font-normal text-ink/60">नहीं, अन्य समुदाय</span>
-                  </div>
-                </div>
-                <span className="text-ink/40">→</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  updateProfile({ isScheduledCaste: true });
-                  handleNext();
-                }}
-                className="flex items-center justify-between rounded-2xl border-2 border-ink/15 p-4 text-left font-bold transition hover:bg-sand/30 text-ink min-h-[58px]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">❓</span>
-                  <div>
-                    <span className="block text-base font-extrabold">I am not sure / I don&apos;t know</span>
-                    <span className="block text-xs font-normal text-ink/60">मुझे पूरी जानकारी नहीं है</span>
-                  </div>
-                </div>
-                <span className="text-ink/40">→</span>
-              </button>
+              {[
+                { key: "SC" as CommunityCategory, label: t("assess.q1.sc", locale), icon: "✓", hindiLabel: "अनुसूचित जाति" },
+                { key: "ST" as CommunityCategory, label: t("assess.q1.st", locale), icon: "✓", hindiLabel: "अनुसूचित जनजाति" },
+                { key: "Other" as CommunityCategory, label: t("assess.q1.other", locale), icon: "○", hindiLabel: "अन्य समुदाय" },
+                { key: "prefer_not_to_say" as CommunityCategory, label: t("assess.q1.prefer_not", locale), icon: "—", hindiLabel: "बताना नहीं चाहते" },
+              ].map((opt) => {
+                const isSelected = profile.community === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => handleCommunitySelect(opt.key)}
+                    className={`flex items-center justify-between rounded-2xl border-2 p-4 text-left font-bold transition min-h-[58px] ${
+                      isSelected
+                        ? "border-forest bg-forest/10 text-forest ring-2 ring-forest/20"
+                        : "border-ink/15 hover:bg-sand/30 text-ink"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl" aria-hidden="true">{opt.icon}</span>
+                      <div>
+                        <span className="block text-base font-extrabold">{opt.label}</span>
+                        <span className="block text-xs font-normal text-ink/60">{opt.hindiLabel}</span>
+                      </div>
+                    </div>
+                    <span className="text-ink/40" aria-hidden="true">→</span>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Non-SC notice */}
+            {profile.community && profile.community !== "SC" && !nonScDismissed && (
+              <div className="mt-4 rounded-2xl border-2 border-amber-400 bg-amber-50 p-4 text-xs text-amber-900">
+                <span className="font-extrabold flex items-center gap-1.5 mb-1"><svg className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> Important Information</span>
+                <p className="leading-relaxed">
+                  {t("assess.q1.non_sc_note", locale)}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNonScDismissed(true);
+                    handleNext();
+                  }}
+                  className="mt-3 w-full rounded-xl bg-amber-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-amber-700 min-h-[44px]"
+                >
+                  I understand, continue exploring →
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -295,81 +303,44 @@ function AssessmentContent() {
               Question 2
             </span>
             <h1 className="mt-2 text-2xl font-black text-ink sm:text-3xl leading-snug">
-              Do you have an SC caste certificate?
+              {t("assess.q2.title", locale)}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-forest">
-              क्या आपके पास जाति प्रमाण पत्र है?
-            </p>
             <p className="mt-3 text-xs text-ink/70 leading-relaxed">
-              An official paper or digital certificate issued by your local Tahsildar / revenue office is required for the application.
+              {t("assess.q2.hint", locale)}
             </p>
 
             <div className="mt-6 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  updateProfile({ casteCertificateStatus: "in_hand" });
-                  handleNext();
-                }}
-                className={`flex items-center justify-between rounded-2xl border-2 p-4 text-left font-bold transition min-h-[58px] ${
-                  profile.casteCertificateStatus === "in_hand"
-                    ? "border-forest bg-forest/10 text-forest ring-2 ring-forest/20"
-                    : "border-ink/15 hover:bg-sand/30 text-ink"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📄</span>
-                  <div>
-                    <span className="block text-base font-extrabold">Yes, I have it in hand</span>
-                    <span className="block text-xs font-normal text-ink/60">हाँ, मेरे पास प्रमाण पत्र है</span>
-                  </div>
-                </div>
-                <span className="text-ink/40">→</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  updateProfile({ casteCertificateStatus: "applied" });
-                  handleNext();
-                }}
-                className={`flex items-center justify-between rounded-2xl border-2 p-4 text-left font-bold transition min-h-[58px] ${
-                  profile.casteCertificateStatus === "applied"
-                    ? "border-forest bg-forest/10 text-forest ring-2 ring-forest/20"
-                    : "border-ink/15 hover:bg-sand/30 text-ink"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">⏳</span>
-                  <div>
-                    <span className="block text-base font-extrabold">I have applied for it</span>
-                    <span className="block text-xs font-normal text-ink/60">आवेदन कर दिया है, मिलना बाकी है</span>
-                  </div>
-                </div>
-                <span className="text-ink/40">→</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  updateProfile({ casteCertificateStatus: "not_available" });
-                  handleNext();
-                }}
-                className={`flex items-center justify-between rounded-2xl border-2 p-4 text-left font-bold transition min-h-[58px] ${
-                  profile.casteCertificateStatus === "not_available"
-                    ? "border-forest bg-forest/10 text-forest ring-2 ring-forest/20"
-                    : "border-ink/15 hover:bg-sand/30 text-ink"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">ℹ️</span>
-                  <div>
-                    <span className="block text-base font-extrabold">Not yet / Need help getting one</span>
-                    <span className="block text-xs font-normal text-ink/60">अभी नहीं है (हम बताएंगे कैसे प्राप्त करें)</span>
-                  </div>
-                </div>
-                <span className="text-ink/40">→</span>
-              </button>
+              {[
+                { key: "in_hand" as const, label: t("assess.q2.in_hand", locale), icon: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>, hindiLabel: "हाँ, मेरे पास प्रमाण पत्र है" },
+                { key: "applied" as const, label: t("assess.q2.applied", locale), icon: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, hindiLabel: "आवेदन कर दिया है, मिलना बाकी है" },
+                { key: "not_available" as const, label: t("assess.q2.not_available", locale), icon: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, hindiLabel: "अभी नहीं है (हम बताएंगे कैसे प्राप्त करें)" },
+              ].map((opt) => {
+                const isSelected = profile.casteCertificateStatus === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => {
+                      updateProfile({ casteCertificateStatus: opt.key });
+                      handleNext();
+                    }}
+                    className={`flex items-center justify-between rounded-2xl border-2 p-4 text-left font-bold transition min-h-[58px] ${
+                      isSelected
+                        ? "border-forest bg-forest/10 text-forest ring-2 ring-forest/20"
+                        : "border-ink/15 hover:bg-sand/30 text-ink"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl" aria-hidden="true">{opt.icon}</span>
+                      <div>
+                        <span className="block text-base font-extrabold">{opt.label}</span>
+                        <span className="block text-xs font-normal text-ink/60">{opt.hindiLabel}</span>
+                      </div>
+                    </div>
+                    <span className="text-ink/40" aria-hidden="true">→</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -381,11 +352,8 @@ function AssessmentContent() {
               Question 3
             </span>
             <h1 className="mt-2 text-2xl font-black text-ink sm:text-3xl leading-snug">
-              What do you need the money for?
+              {t("assess.q3.title", locale)}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-forest">
-              आपको सहायता किस उद्देश्य के लिए चाहिए?
-            </p>
 
             <div className="mt-6 flex flex-col gap-4">
               <button
@@ -400,13 +368,13 @@ function AssessmentContent() {
                     : "border-ink/15 hover:bg-sand/30 text-ink"
                 }`}
               >
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-forest/10 text-2xl">
-                  🏪
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-forest/10 text-forest" aria-hidden="true">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                 </span>
                 <div>
-                  <span className="block text-base font-extrabold">Start or grow a business</span>
+                  <span className="block text-base font-extrabold">{t("assess.q3.business", locale)}</span>
                   <span className="block text-xs font-normal text-ink/65 mt-0.5">
-                    Tailoring, grocery shop, transport, tools, animal husbandry, trade
+                    {t("assess.q3.business_hint", locale)}
                   </span>
                 </div>
               </button>
@@ -423,13 +391,13 @@ function AssessmentContent() {
                     : "border-ink/15 hover:bg-sand/30 text-ink"
                 }`}
               >
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-forest/10 text-2xl">
-                  🎓
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-forest/10 text-forest" aria-hidden="true">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>
                 </span>
                 <div>
-                  <span className="block text-base font-extrabold">Higher or technical education</span>
+                  <span className="block text-base font-extrabold">{t("assess.q3.education", locale)}</span>
                   <span className="block text-xs font-normal text-ink/65 mt-0.5">
-                    College fees, engineering, medical, professional degrees
+                    {t("assess.q3.education_hint", locale)}
                   </span>
                 </div>
               </button>
@@ -444,16 +412,13 @@ function AssessmentContent() {
               Question 4
             </span>
             <h1 className="mt-2 text-2xl font-black text-ink sm:text-3xl leading-snug">
-              How much money do you need?
+              {t("assess.q4.title", locale)}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-forest">
-              लगभग कितने रुपयों की आवश्यकता है?
-            </p>
             <p className="mt-2 text-xs text-ink/70">
-              Government schemes can cover up to 90% of your total requirement.
+              {t("assess.q4.hint", locale)}
             </p>
 
-            {/* Quick selectable ranges (Tap-friendly buttons) */}
+            {/* Quick selectable ranges — NO pre-selected default */}
             <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {[
                 { label: "Up to ₹50,000", amount: 45000, desc: "Small shop / tools / raw material" },
@@ -461,7 +426,9 @@ function AssessmentContent() {
                 { label: "₹1.4 Lakh to ₹5 Lakh", amount: 300000, desc: "Vehicles, machines, medium setup (UNY)" },
                 { label: "₹5 Lakh to ₹20 Lakh+", amount: 1000000, desc: "Large unit, workshop, higher course" },
               ].map((range) => {
+                // Only highlight if user has actually selected — requestedAmount > 0
                 const isChosen =
+                  profile.requestedAmount > 0 &&
                   profile.requestedAmount >= range.amount * 0.7 &&
                   profile.requestedAmount <= range.amount * 1.5;
                 return (
@@ -471,7 +438,7 @@ function AssessmentContent() {
                     onClick={() => {
                       updateProfile({
                         requestedAmount: range.amount,
-                        projectOrCourseCost: Math.round(range.amount * 1.1),
+                        projectOrCourseCost: range.amount,
                       });
                     }}
                     className={`rounded-2xl border-2 p-3.5 text-left transition min-h-[64px] ${
@@ -489,22 +456,24 @@ function AssessmentContent() {
 
             {/* Manual input for precision */}
             <div className="mt-6 border-t border-ink/10 pt-4">
-              <label className="block text-xs font-bold text-ink/70 mb-1.5">
-                Or enter an exact amount:
+              <label htmlFor="amount-input" className="block text-xs font-bold text-ink/70 mb-1.5">
+                {t("assess.q4.exact_label", locale)}
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-3 text-base font-bold text-ink/40">₹</span>
+                <span className="absolute left-3.5 top-3 text-base font-bold text-ink/40" aria-hidden="true">₹</span>
                 <input
+                  id="amount-input"
                   type="number"
                   min={5000}
                   max={5000000}
                   step={5000}
-                  value={profile.requestedAmount}
+                  value={profile.requestedAmount || ""}
+                  placeholder="0"
                   onChange={(e) => {
-                    const val = Number(e.target.value);
+                    const val = Math.max(0, Number(e.target.value));
                     updateProfile({
                       requestedAmount: val,
-                      projectOrCourseCost: Math.round(val * 1.1),
+                      projectOrCourseCost: val,
                     });
                   }}
                   className="w-full rounded-xl border border-ink/20 bg-cream/40 py-3 pl-8 pr-4 text-base font-bold text-ink focus:border-forest focus:bg-white focus:outline-none min-h-[48px]"
@@ -516,9 +485,10 @@ function AssessmentContent() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full sm:w-auto rounded-xl bg-forest px-8 py-3.5 text-sm font-extrabold text-white shadow-soft transition hover:bg-ink min-h-[48px]"
+                disabled={profile.requestedAmount <= 0}
+                className="w-full sm:w-auto rounded-xl bg-forest px-8 py-3.5 text-sm font-extrabold text-white shadow-soft transition hover:bg-ink min-h-[48px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Continue →
+                {t("assess.continue", locale)}
               </button>
             </div>
           </div>
@@ -531,16 +501,13 @@ function AssessmentContent() {
               Question 5
             </span>
             <h1 className="mt-2 text-2xl font-black text-ink sm:text-3xl leading-snug">
-              About how much does your family earn in a year?
+              {t("assess.q5.title", locale)}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-forest">
-              आपके परिवार की कुल सालाना आय लगभग कितनी है?
-            </p>
             <p className="mt-2 text-xs text-ink/70 leading-relaxed">
-              Under official rules, family income must be within <strong>₹5,00,000 per year</strong> to qualify for concessional loans.
+              {t("assess.q5.hint", locale)}
             </p>
 
-            {/* Quick selectable ranges */}
+            {/* Quick selectable ranges — NO pre-selected default */}
             <div className="mt-6 flex flex-col gap-3">
               {[
                 { label: "Less than ₹1.5 Lakh / year", val: 120000, desc: "Under ₹12,000 a month" },
@@ -548,10 +515,10 @@ function AssessmentContent() {
                 { label: "₹3 Lakh to ₹5 Lakh / year", val: 400000, desc: "About ₹25,000 to ₹40,000 a month" },
                 { label: "More than ₹5 Lakh / year", val: 600000, desc: "Above government limit" },
               ].map((income) => {
+                // Only show as selected if annualFamilyIncome > 0 (user has answered)
                 const isSelected =
-                  income.val <= 500000
-                    ? profile.annualFamilyIncome <= income.val && profile.annualFamilyIncome >= income.val - 100000
-                    : profile.annualFamilyIncome > 500000;
+                  profile.annualFamilyIncome > 0 &&
+                  profile.annualFamilyIncome === income.val;
                 return (
                   <button
                     key={income.label}
@@ -569,7 +536,7 @@ function AssessmentContent() {
                       <span className="block text-base font-extrabold">{income.label}</span>
                       <span className="block text-xs text-ink/60">{income.desc}</span>
                     </div>
-                    <span className="text-xl">{isSelected ? "✓" : "○"}</span>
+                    <span className="text-xl" aria-hidden="true">{isSelected ? "✓" : "○"}</span>
                   </button>
                 );
               })}
@@ -577,7 +544,7 @@ function AssessmentContent() {
 
             {profile.annualFamilyIncome > 500000 && (
               <div className="mt-4 rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-800">
-                ⚠️ Note: The government limit is ₹5,00,000. Beneficiaries earning above ₹5 Lakh may not be eligible for these subsidized schemes.
+                <svg className="h-4 w-4 inline mr-1 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> {t("assess.q5.over_limit", locale)}
               </div>
             )}
 
@@ -585,9 +552,10 @@ function AssessmentContent() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full sm:w-auto rounded-xl bg-forest px-8 py-3.5 text-sm font-extrabold text-white shadow-soft transition hover:bg-ink min-h-[48px]"
+                disabled={profile.annualFamilyIncome <= 0}
+                className="w-full sm:w-auto rounded-xl bg-forest px-8 py-3.5 text-sm font-extrabold text-white shadow-soft transition hover:bg-ink min-h-[48px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Continue →
+                {t("assess.continue", locale)}
               </button>
             </div>
           </div>
@@ -600,25 +568,24 @@ function AssessmentContent() {
               Question 6
             </span>
             <h1 className="mt-2 text-2xl font-black text-ink sm:text-3xl leading-snug">
-              Which state do you live in?
+              {t("assess.q6.title", locale)}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-forest">
-              आप किस राज्य में रहते हैं?
-            </p>
             <p className="mt-2 text-xs text-ink/70">
-              We use this to find the government loan office and partner banks in your district.
+              {t("assess.q6.hint", locale)}
             </p>
 
             <div className="mt-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-ink/70 mb-1.5">
-                  Select your State / Union Territory:
+                <label htmlFor="state-select" className="block text-xs font-bold text-ink/70 mb-1.5">
+                  {t("assess.q6.select_state", locale)}:
                 </label>
                 <select
+                  id="state-select"
                   value={profile.state}
                   onChange={(e) => updateProfile({ state: e.target.value })}
                   className="w-full rounded-xl border border-ink/20 bg-cream/40 p-3.5 text-base font-bold text-ink focus:border-forest focus:bg-white focus:outline-none min-h-[50px]"
                 >
+                  <option value="">{t("assess.q6.select_placeholder", locale)}</option>
                   {INDIAN_STATES_AND_UTS.filter((s) => s !== "All States & UTs").map((s) => (
                     <option key={s} value={s}>
                       {s}
@@ -629,14 +596,14 @@ function AssessmentContent() {
 
               {/* Quick state chips for popular states */}
               <div>
-                <span className="block text-xs text-ink/50 mb-1.5">Or tap quickly:</span>
+                <span className="block text-xs text-ink/50 mb-1.5">{t("assess.q6.tap_quickly", locale)}</span>
                 <div className="flex flex-wrap gap-2">
                   {["Uttar Pradesh", "Maharashtra", "Bihar", "Madhya Pradesh", "Rajasthan", "Tamil Nadu", "Delhi"].map((st) => (
                     <button
                       key={st}
                       type="button"
                       onClick={() => updateProfile({ state: st })}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition min-h-[36px] ${
                         profile.state === st
                           ? "bg-forest text-white"
                           : "bg-sand/60 text-ink/70 hover:bg-sand"
@@ -649,10 +616,11 @@ function AssessmentContent() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-ink/70 mb-1.5">
-                  District / Town (Optional):
+                <label htmlFor="district-input" className="block text-xs font-bold text-ink/70 mb-1.5">
+                  {t("assess.q6.district_label", locale)}
                 </label>
                 <input
+                  id="district-input"
                   type="text"
                   placeholder="e.g. Varanasi, Pune, Patna"
                   value={profile.district || ""}
@@ -666,14 +634,29 @@ function AssessmentContent() {
               <button
                 type="button"
                 onClick={() => router.push("/results")}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-forest px-8 py-4 text-base font-black text-white shadow-soft transition hover:bg-ink min-h-[54px]"
+                disabled={!profile.state}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-forest px-8 py-4 text-base font-black text-white shadow-soft transition hover:bg-ink min-h-[54px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <span>Show My Best Match</span>
-                <span>→</span>
+                <span>{t("assess.show_results", locale)}</span>
               </button>
             </div>
           </div>
         )}
+
+        {/* Ask Sahayak button at bottom of assessment */}
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              const fab = document.getElementById("chatbot-fab");
+              if (fab) fab.click();
+            }}
+            className="inline-flex items-center gap-2 text-xs font-bold text-forest hover:text-ink transition py-2 px-3 rounded-lg hover:bg-forest/5 min-h-[44px]"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+            <span>{t("assess.ask_sahayak", locale)} — {t("chatbot.subtitle", locale)}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

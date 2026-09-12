@@ -111,7 +111,7 @@ export default function CalculatorPage() {
         {/* Highlight Banner for Quarterly MFS repayment */}
         {currentScheme.id === "MFS" && (
           <div className="mb-6 rounded-2xl border border-gold/40 bg-gold/15 p-4 text-xs text-ink flex items-start gap-3">
-            <span className="text-xl">ℹ️</span>
+            <svg className="h-5 w-5 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <div>
               <span className="font-extrabold text-ink">Paid Every 3 Months:</span>
               <p className="mt-0.5 text-ink/80 leading-relaxed">
@@ -314,7 +314,7 @@ export default function CalculatorPage() {
             onClick={() => router.push("/partners")}
             className="w-full flex items-center justify-center gap-2 rounded-2xl border border-ink/20 bg-white px-6 py-3.5 text-sm font-bold text-ink hover:bg-sand min-h-[48px]"
           >
-            <span>Where to Apply in {profile.state}</span>
+            <span>Where to Apply{profile.state ? ` in ${profile.state}` : ""}</span>
           </button>
         </div>
       </div>

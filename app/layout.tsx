@@ -3,6 +3,7 @@ import "./globals.css";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { ClientProviders } from "../components/ClientProviders";
+import { ChatbotDrawer } from "../components/ChatbotDrawer";
 
 export const metadata: Metadata = {
   title: "Scheme Sahayak | From eligibility to action",
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <ChatbotDrawer />
         </ClientProviders>
       </body>
     </html>
